@@ -3,7 +3,10 @@ package com.example;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.example.model.Person;
@@ -36,37 +39,91 @@ public class App {
 
         // 1-Filter (param: Predicate)
 
-        // El filter necesita un Predicate, que es una expresión que retorna ture o false
+        // El filter necesita un Predicate, que es una expresión que retorna ture o
+        // false
 
         // maayores a 18
         // a nivel sql seria SELECT * PERSON p WHERE P.edad >= 18;
-        //SQL también es declarativo, no le programamos como por dentro el motor de base de datos hace wl where, nos interesa no mas que cumpla la condición, pero en este caso en java
-       // en vez de stream() esta tambien parallelStream() que trabaja con hilos internamente, pero hay q ver cuando ocuparlo, a veces no rinde bien, hay que investigar. Pero la programación asincronica  lo reemplaza, miw upm
+        // SQL también es declarativo, no le programamos como por dentro el motor de
+        // base de datos hace wl where, nos interesa no mas que cumpla la condición,
+        // pero en este caso en java
+        // en vez de stream() esta tambien parallelStream() que trabaja con hilos
+        // internamente, pero hay q ver cuando ocuparlo, a veces no rinde bien, hay que
+        // investigar. Pero la programación asincronica lo reemplaza, miw upm
         List<Person> filteredList = persons.stream().filter(p -> App.getAge(p.getBirthDate()) >= 18)
-                                                     .collect(Collectors.toList());
-       // App.printList(filteredList);    
-
-       // 2-Map     Pide como parametro una función, no un predicate, la función espera devolver algun parametro o valor segun la función indicada
-       
-       // transforma elementos de una colección. De un tipo A a un tipo B
-      List<Integer> filteredList2 =  persons.stream()
-      //.filter(p -> App.getAge(p.getBirthDate()) >= 18)
-                .map(p-> App.getAge(p.getBirthDate()) )
                 .collect(Collectors.toList());
+        // App.printList(filteredList);
 
-               // App.printList(filteredList2);  
+        // 2-Map Pide como parametro una función, no un predicate, la función espera
+        // devolver algun parametro o valor segun la función indicada
 
-      List<String> filteredList2String = persons.stream()
-                                            .map(p -> "Coders "+p.getName()).collect(Collectors.toList());
-        App.printList(filteredList2String);
+        // transforma elementos de una colección. De un tipo A a un tipo B
+        List<Integer> filteredList2 = persons.stream()
+                // .filter(p -> App.getAge(p.getBirthDate()) >= 18)
+                .map(p -> App.getAge(p.getBirthDate())).collect(Collectors.toList());
+
+        // App.printList(filteredList2);
+
+
+// el primer String es el de entrada y el segundo salida
+//Para reciblar lambda
+Function<String, String> coderFunction = name -> "Coder " + name;
+
+        List<String> filteredList2String = persons.stream()
+        .map(Person::getName) // p-> p.getName()  // sin esto da error abajo, porque estaria concatenando un objeto persona con un string. aca lo transofrmo en cadena de texto para concatenar 
+        .map(coderFunction)
+                .collect(Collectors.toList());
+       // App.printList(filteredList2String);
+
+// 3- sorted
+// Para reciblar comparador
+Comparator<Person> byNameAsc = (Person o1, Person o2) -> o1.getName().compareTo(o2.getName());
+Comparator<Person> byNameDesc = (Person o1, Person o2) -> o2.getName().compareTo(o1.getName());
+Comparator<Person> byBirthDate = (Person o1, Person o2) -> o1.getBirthDate().compareTo(o2.getBirthDate());
+   
+List<Person> filteredList3 =   persons.stream()
+       // de forma nata puede comparar string y numeros pero no objetos, pero es una lista de objetos, por lo tanto hay que indicarle algun criterio, un comparador como arametro
+                .sorted(byBirthDate)
+                .collect(Collectors.toList()); 
+               // App.printList(filteredList3);
+
+
+// 4- Match (param: Predicate), devuelve un true o false
+
+//Para reciclar un Predicate, para cada persona que venga yo quiero extrer su nombre y que empieze con "J"
+Predicate<Person> startsWithPredicate = person -> person.getName().startsWith("J");
+
+    // Variantes de Match
+
+
+
+    // anyMatch: No evalua todo el stream, termina cuando encuentra una coincidencia
+
+boolean rpta1 = persons.stream()
+            .anyMatch(startsWithPredicate);
+        
+//System.out.println(rpta1);
+
+        // allMatch todos coinciden
+
+        boolean rpta2 = persons.stream()
+        .allMatch(startsWithPredicate);
+        //System.out.println(rpta1);
+
+         // noneMatch ninguno coinciden
+
+         boolean rpta3 = persons.stream()
+         .allMatch(startsWithPredicate);
+         System.out.println(rpta1);
     }
 
     public static int getAge(LocalDate birthDate) {
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
 
-    //El simbolo de interrogaci´n es un generico para poder recibir listas de cualquier tipo
-   // <?> es lo mismo que <? extend Objects> es un tema de genericos
+    // El simbolo de interrogaci´n es un generico para poder recibir listas de
+    // cualquier tipo
+    // <?> es lo mismo que <? extend Objects> es un tema de genericos
     public static void printList(List<?> list) {
         list.forEach(System.out::println);
     }
