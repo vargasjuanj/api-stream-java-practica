@@ -117,6 +117,8 @@ boolean rpta1 = persons.stream()
          System.out.println(rpta1);
     }
 
+
+    
     public static int getAge(LocalDate birthDate) {
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
